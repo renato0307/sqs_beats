@@ -1,0 +1,2 @@
+# sqsbeatoutput
+Beats SQS output
