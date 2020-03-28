@@ -7,7 +7,7 @@ import (
 
 type sqsConfig struct {
 	Region     string        `config:"region"`
-	QueueName  string        `config:"queue_name"`
+	QueueURL   string        `config:"queue_url"`
 	BatchSize  int           `config:"batch_size"`
 	MaxRetries int           `config:"max_retries"`
 	Timeout    time.Duration `config:"timeout"`
@@ -19,14 +19,14 @@ type backoff struct {
 	Max  time.Duration
 }
 
-// TODO: review for SQS
 const (
-	defaultBatchSize = 50
-	maxBatchSize     = 500
+	defaultBatchSize = 1
+	maxBatchSize     = 10
 )
 
 var (
 	defaultConfig = sqsConfig{
+		BatchSize:  defaultBatchSize,
 		Timeout:    90 * time.Second,
 		MaxRetries: 3,
 		Backoff: backoff{
@@ -41,8 +41,8 @@ func (c *sqsConfig) Validate() error {
 		return errors.New("region is not defined")
 	}
 
-	if c.QueueName == "" {
-		return errors.New("queue_name is not defined")
+	if c.QueueURL == "" {
+		return errors.New("queue_url is not defined")
 	}
 
 	if c.BatchSize > maxBatchSize || c.BatchSize < 1 {

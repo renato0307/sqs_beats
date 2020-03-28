@@ -14,9 +14,9 @@ func TestValidate(t *testing.T) {
 	}{
 		{"No config", sqsConfig{}, false},
 		{"Just region", sqsConfig{Region: "eu-west-1"}, false},
-		{"Just queue_name", sqsConfig{QueueName: "test_queue"}, false},
-		{"Just region and queue_name", sqsConfig{QueueName: "test_queue", Region: "eu-west-1"}, false},
-		{"With all required", sqsConfig{QueueName: "test_queue", Region: "eu-west-1", BatchSize: 1}, true},
+		{"Just queue_name", sqsConfig{QueueURL: "test_queue"}, false},
+		{"Just region and queue_name", sqsConfig{QueueURL: "test_queue", Region: "eu-west-1"}, false},
+		{"With all required", sqsConfig{QueueURL: "test_queue", Region: "eu-west-1", BatchSize: 1}, true},
 	}
 
 	for _, test := range tests {
