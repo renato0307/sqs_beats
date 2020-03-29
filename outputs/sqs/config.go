@@ -3,6 +3,8 @@ package sqs
 import (
 	"errors"
 	"time"
+
+	"github.com/elastic/beats/libbeat/common"
 )
 
 type sqsConfig struct {
@@ -50,4 +52,12 @@ func (c *sqsConfig) Validate() error {
 	}
 
 	return nil
+}
+
+func readConfig(cfg *common.Config) (*sqsConfig, error) {
+	c := defaultConfig
+	if err := cfg.Unpack(&c); err != nil {
+		return nil, err
+	}
+	return &c, nil
 }

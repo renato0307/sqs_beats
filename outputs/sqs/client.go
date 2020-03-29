@@ -26,7 +26,11 @@ type client struct {
 	observer outputs.Observer
 }
 
-func newClient(sess *session.Session, config *sqsConfig, observer outputs.Observer, beat beat.Info) (*client, error) {
+func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*client, error) {
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
 	client := &client{
 		svc:      sqs.New(sess),
 		queueURL: config.QueueURL,

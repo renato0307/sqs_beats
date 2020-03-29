@@ -17,7 +17,19 @@ func makeSqs(
 	cfg *common.Config,
 ) (outputs.Group, error) {
 
-	var group outputs.Group
+	config, err := readConfig(cfg)
+	if err != nil {
+		return outputs.Fail(err)
+	}
 
-	return group, nil
+	client, err := newClient(config, observer, beat)
+	if err != nil {
+		return outputs.Fail(err)
+	}
+
+	retry := 0
+	if config.MaxRetries < 0 {
+		retry = -1
+	}
+	return outputs.Success(config.BatchSize, retry, client)
 }
