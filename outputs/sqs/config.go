@@ -8,15 +8,13 @@ import (
 )
 
 type sqsConfig struct {
-	AccessKeyID     string        `config:"access_key_id"`
-	AccessSecretKey string        `config:"access_secret_key"`
-	AccessToken     string        `config:"access_token"`
-	Region          string        `config:"region"`
-	QueueURL        string        `config:"queue_url"`
-	BatchSize       int           `config:"batch_size"`
-	MaxRetries      int           `config:"max_retries"`
-	Timeout         time.Duration `config:"timeout"`
-	Backoff         backoff       `config:"backoff"`
+	AccessKeyID     string `config:"access_key_id"`
+	AccessSecretKey string `config:"access_secret_key"`
+	AccessToken     string `config:"access_token"`
+	Region          string `config:"region"`
+	QueueURL        string `config:"queue_url"`
+	BatchSize       int    `config:"batch_size"`
+	MaxRetries      int    `config:"max_retries"`
 }
 
 type backoff struct {
@@ -32,12 +30,7 @@ const (
 var (
 	defaultConfig = sqsConfig{
 		BatchSize:  defaultBatchSize,
-		Timeout:    90 * time.Second,
 		MaxRetries: 3,
-		Backoff: backoff{
-			Init: 1 * time.Second,
-			Max:  60 * time.Second,
-		},
 	}
 )
 

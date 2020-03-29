@@ -1,7 +1,6 @@
 package sqs
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strconv"
 	"time"
@@ -53,7 +52,6 @@ func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*c
 			Pretty:     false,
 			EscapeHTML: false,
 		}),
-		timeout:  config.Timeout,
 		observer: observer,
 	}
 
@@ -76,7 +74,6 @@ func (c *client) Publish(batch publisher.Batch) error {
 
 	log := logp.NewLogger(logSelector)
 
-	// checks client and batch
 	if c == nil {
 		panic("no client")
 	}
@@ -84,20 +81,56 @@ func (c *client) Publish(batch publisher.Batch) error {
 		panic("no batch")
 	}
 
-	// gets the events to send
 	events := batch.Events()
 	c.observer.NewBatch(len(events))
 
-	log.Infof("Publishing batch with %d events", len(events))
+	log.Debugf("Publishing batch with %d events", len(events))
 
-	// converts events to sqs batch entries
+	input, err := buildInput(c, events)
+	if err != nil {
+		return err
+	}
+
+	output, err := c.svc.SendMessageBatch(input)
+	if err != nil {
+		return err
+	}
+
+	numberOfFailed := len(output.Failed)
+	log.Debugf("Number of failed events: %d", numberOfFailed)
+	if numberOfFailed > 0 {
+		c.observer.Failed(numberOfFailed)
+		retryEvents := getRetryEvents(output, events)
+		batch.RetryEvents(retryEvents)
+		return nil
+	}
+
+	batch.ACK() // if no message fails, ack the complete batch
+
+	return nil
+}
+
+// returns the list of events to retry using the SendMessageBatchOutput
+func getRetryEvents(output *sqs.SendMessageBatchOutput, events []publisher.Event) []publisher.Event {
+	var retryEvents []publisher.Event
+	retryEvents = make([]publisher.Event, len(output.Failed))
+	for i, failed := range output.Failed {
+		n, _ := strconv.Atoi(*failed.Id)
+		retryEvents[i] = events[n]
+	}
+
+	return retryEvents
+}
+
+// build the input to send a batch of messages
+func buildInput(c *client, events []publisher.Event) (*sqs.SendMessageBatchInput, error) {
 	var entries []*sqs.SendMessageBatchRequestEntry
 	entries = make([]*sqs.SendMessageBatchRequestEntry, len(events))
 
 	for i, event := range events {
 		serializedEvent, err := c.codec.Encode(c.index, &event.Content)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		entries[i] = &sqs.SendMessageBatchRequestEntry{
@@ -106,45 +139,10 @@ func (c *client) Publish(batch publisher.Batch) error {
 		}
 	}
 
-	// send the messages
 	var input = &sqs.SendMessageBatchInput{
 		Entries:  entries,
 		QueueUrl: &c.queueURL,
 	}
-	output, err := c.svc.SendMessageBatch(input)
-	if err != nil {
-		return err
-	}
 
-	// handles failed messages
-	if len(output.Failed) > 0 {
-		c.observer.Failed(len(output.Failed))
-		var retryEvents []publisher.Event
-		retryEvents = make([]publisher.Event, len(output.Failed))
-		for i, failed := range output.Failed {
-			n, _ := strconv.Atoi(*failed.Id)
-			retryEvents[i] = events[n]
-		}
-		batch.RetryEvents(retryEvents)
-		return nil
-	}
-
-	// if no message fails, ack the complete batch
-	batch.ACK()
-	return nil
-}
-
-func base64Encode(value []byte) []byte {
-	encoded := make([]byte, base64.URLEncoding.EncodedLen(len(value)))
-	base64.URLEncoding.Encode(encoded, value)
-	return encoded
-}
-
-func base64Decode(value []byte) ([]byte, error) {
-	decoded := make([]byte, base64.URLEncoding.DecodedLen(len(value)))
-	b, err := base64.URLEncoding.Decode(decoded, value)
-	if err != nil {
-		return nil, err
-	}
-	return decoded[:b], nil
+	return input, nil
 }
