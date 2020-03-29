@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/elastic/beats/libbeat/beat"
 	"github.com/elastic/beats/libbeat/logp"
 	"github.com/elastic/beats/libbeat/outputs"
@@ -22,7 +23,7 @@ const (
 )
 
 type client struct {
-	svc      *sqs.SQS
+	svc      sqsiface.SQSAPI
 	queueURL string
 	beatName string
 	index    string
@@ -49,14 +50,18 @@ func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*c
 		queueURL: config.QueueURL,
 		beatName: beat.Beat,
 		index:    beat.IndexPrefix,
-		codec: json.New(beat.Version, json.Config{
-			Pretty:     false,
-			EscapeHTML: false,
-		}),
+		codec:    newCodec(beat.Version),
 		observer: observer,
 	}
 
 	return client, nil
+}
+
+func newCodec(beatVersion string) *json.Encoder {
+	return json.New(beatVersion, json.Config{
+		Pretty:     false,
+		EscapeHTML: false,
+	})
 }
 
 func (c client) String() string {
