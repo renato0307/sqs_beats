@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/elastic/beats/metricbeat/cmd"
-	_ "github.com/renato0307/sqsbeatoutput/outputs/sqs"
+	_ "github.com/renato0307/sqs_beats/outputs/sqs"
 )
 
 func main() {

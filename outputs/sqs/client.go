@@ -11,10 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/elastic/beats/libbeat/beat"
+	"github.com/elastic/beats/libbeat/logp"
 	"github.com/elastic/beats/libbeat/outputs"
 	"github.com/elastic/beats/libbeat/outputs/codec"
 	"github.com/elastic/beats/libbeat/outputs/codec/json"
 	"github.com/elastic/beats/libbeat/publisher"
+)
+
+const (
+	logSelector = "sqs_output"
 )
 
 type client struct {
@@ -28,31 +33,6 @@ type client struct {
 }
 
 func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*client, error) {
-
-	// If no access key is provided establish connection using
-	// the shared configuration
-	if config.AccessKeyID == "" {
-		sess := session.Must(session.NewSessionWithOptions(session.Options{
-			Config:            aws.Config{Region: &config.Region},
-			SharedConfigState: session.SharedConfigEnable,
-		}))
-
-		client := &client{
-			svc:      sqs.New(sess),
-			queueURL: config.QueueURL,
-			beatName: beat.Beat,
-			index:    beat.IndexPrefix,
-			codec: json.New(beat.Version, json.Config{
-				Pretty:     false,
-				EscapeHTML: false,
-			}),
-			timeout:  config.Timeout,
-			observer: observer,
-		}
-
-		return client, nil
-	}
-
 	sess, err := session.NewSession(&aws.Config{
 		Region: &config.Region,
 		Credentials: credentials.NewStaticCredentials(
@@ -94,6 +74,8 @@ func (c *client) Connect() error {
 
 func (c *client) Publish(batch publisher.Batch) error {
 
+	log := logp.NewLogger(logSelector)
+
 	// checks client and batch
 	if c == nil {
 		panic("no client")
@@ -106,9 +88,12 @@ func (c *client) Publish(batch publisher.Batch) error {
 	events := batch.Events()
 	c.observer.NewBatch(len(events))
 
+	log.Infof("Publishing batch with %d events", len(events))
+
 	// converts events to sqs batch entries
 	var entries []*sqs.SendMessageBatchRequestEntry
 	entries = make([]*sqs.SendMessageBatchRequestEntry, len(events))
+
 	for i, event := range events {
 		serializedEvent, err := c.codec.Encode(c.index, &event.Content)
 		if err != nil {
@@ -116,8 +101,8 @@ func (c *client) Publish(batch publisher.Batch) error {
 		}
 
 		entries[i] = &sqs.SendMessageBatchRequestEntry{
-			Id:          aws.String(string(i)),
-			MessageBody: aws.String(string(base64Encode(serializedEvent))),
+			Id:          aws.String(fmt.Sprintf("%d", i)),
+			MessageBody: aws.String(string(serializedEvent)),
 		}
 	}
 
