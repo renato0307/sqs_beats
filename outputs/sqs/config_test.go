@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidate(t *testing.T) {
+func TestValidateConfig(t *testing.T) {
 	tests := []struct {
 		Name  string
 		Input sqsConfig

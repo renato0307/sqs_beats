@@ -3,7 +3,6 @@ package sqs
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -28,7 +27,6 @@ type client struct {
 	beatName string
 	index    string
 	codec    codec.Codec
-	timeout  time.Duration
 	observer outputs.Observer
 }
 

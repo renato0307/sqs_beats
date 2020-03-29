@@ -9,16 +9,15 @@ import (
 func TestPublish(t *testing.T) {
 	var batch = mockBatch{}
 	var svc = mockSQS{}
-	var o = mockObserver{}
+	var observer = mockObserver{}
 
 	c := client{
 		beatName: "beat_name",
 		codec:    newCodec("7.6"),
 		index:    "index",
-		observer: o,
+		observer: observer,
 		queueURL: "queue_url",
 		svc:      svc,
-		timeout:  1,
 	}
 
 	err := c.Publish(batch)
