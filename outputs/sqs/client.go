@@ -29,7 +29,9 @@ type client struct {
 
 func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*client, error) {
 
-	if config.AccessKey == "" {
+	// If no access key is provided establish connection using
+	// the shared configuration
+	if config.AccessKeyID == "" {
 		sess := session.Must(session.NewSessionWithOptions(session.Options{
 			Config:            aws.Config{Region: &config.Region},
 			SharedConfigState: session.SharedConfigEnable,
@@ -53,7 +55,7 @@ func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*c
 
 	sess, err := session.NewSession(&aws.Config{
 		Region:      &config.Region,
-		Credentials: credentials.NewStaticCredentials(config.AccessKey, config.SecretKey, ""),
+		Credentials: credentials.NewStaticCredentials(config.AccessKeyID, config.AccessSecretKey, ""),
 	})
 	if err != nil {
 		return nil, err

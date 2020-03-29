@@ -8,14 +8,14 @@ import (
 )
 
 type sqsConfig struct {
-	AccessKey  string        `config:"access_key"`
-	SecretKey  string        `config:"secret_key"`
-	Region     string        `config:"region"`
-	QueueURL   string        `config:"queue_url"`
-	BatchSize  int           `config:"batch_size"`
-	MaxRetries int           `config:"max_retries"`
-	Timeout    time.Duration `config:"timeout"`
-	Backoff    backoff       `config:"backoff"`
+	AccessKeyID     string        `config:"access_key_id"`
+	AccessSecretKey string        `config:"access_secret_key"`
+	Region          string        `config:"region"`
+	QueueURL        string        `config:"queue_url"`
+	BatchSize       int           `config:"batch_size"`
+	MaxRetries      int           `config:"max_retries"`
+	Timeout         time.Duration `config:"timeout"`
+	Backoff         backoff       `config:"backoff"`
 }
 
 type backoff struct {
@@ -41,8 +41,8 @@ var (
 )
 
 func (c *sqsConfig) Validate() error {
-	if c.AccessKey != "" && c.SecretKey == "" {
-		return errors.New("secret_key is not defined")
+	if c.AccessKeyID != "" && c.AccessSecretKey == "" {
+		return errors.New("access_secret_key is not defined")
 	}
 
 	if c.Region == "" {
