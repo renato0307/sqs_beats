@@ -1,6 +1,9 @@
 package sqs
 
 import (
+	"errors"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/elastic/beats/libbeat/outputs"
@@ -23,13 +26,31 @@ func (b mockBatch) RetryEvents(events []publisher.Event) {
 
 type mockSQS struct {
 	sqsiface.SQSAPI
+
+	forceSendMessageError bool
+	forceFailures         bool
 }
 
 func (svc mockSQS) SendMessageBatch(*sqs.SendMessageBatchInput) (*sqs.SendMessageBatchOutput, error) {
-	entries := make([]*sqs.SendMessageBatchResultEntry, 1)
+
+	if svc.forceSendMessageError {
+		return nil, errors.New("error_send_message")
+	}
+
+	if svc.forceFailures {
+		entries := make([]*sqs.BatchResultErrorEntry, 1)
+		entries[0] = &sqs.BatchResultErrorEntry{Id: aws.String("0")}
+		output := sqs.SendMessageBatchOutput{
+			Failed:     entries,
+			Successful: make([]*sqs.SendMessageBatchResultEntry, 0),
+		}
+
+		return &output, nil
+
+	}
 
 	output := sqs.SendMessageBatchOutput{
-		Successful: entries,
+		Successful: make([]*sqs.SendMessageBatchResultEntry, 1),
 	}
 
 	return &output, nil
@@ -40,4 +61,7 @@ type mockObserver struct {
 }
 
 func (o mockObserver) NewBatch(numberOfEvents int) {
+}
+
+func (o mockObserver) Failed(numberOfEvents int) {
 }
