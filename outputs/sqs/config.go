@@ -14,7 +14,6 @@ type sqsConfig struct {
 	Region          string `config:"region"`
 	QueueURL        string `config:"queue_url"`
 	BatchSize       int    `config:"batch_size"`
-	MaxRetries      int    `config:"max_retries"`
 }
 
 type backoff struct {
@@ -29,8 +28,7 @@ const (
 
 var (
 	defaultConfig = sqsConfig{
-		BatchSize:  defaultBatchSize,
-		MaxRetries: 3,
+		BatchSize: defaultBatchSize,
 	}
 )
 
@@ -54,6 +52,7 @@ func (c *sqsConfig) Validate() error {
 	return nil
 }
 
+// reads the configuration applying also the defaults
 func readConfig(cfg *common.Config) (*sqsConfig, error) {
 	c := defaultConfig
 	if err := cfg.Unpack(&c); err != nil {

@@ -6,10 +6,12 @@ import (
 	"github.com/elastic/beats/libbeat/outputs"
 )
 
+// registers the output
 func init() {
 	outputs.RegisterType("sqs", makeSqs)
 }
 
+// creates the SQS output
 func makeSqs(
 	_ outputs.IndexManager,
 	beat beat.Info,
@@ -27,9 +29,5 @@ func makeSqs(
 		return outputs.Fail(err)
 	}
 
-	retry := 0
-	if config.MaxRetries < 0 {
-		retry = -1
-	}
-	return outputs.Success(config.BatchSize, retry, client)
+	return outputs.Success(config.BatchSize, -1, client)
 }

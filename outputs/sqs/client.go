@@ -31,6 +31,7 @@ type client struct {
 	observer outputs.Observer
 }
 
+// creates a new client using the output configuration
 func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*client, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: &config.Region,
@@ -100,8 +101,7 @@ func (c *client) Publish(batch publisher.Batch) error {
 	log.Debugf("Number of failed events: %d", numberOfFailed)
 	if numberOfFailed > 0 {
 		c.observer.Failed(numberOfFailed)
-		retryEvents := getRetryEvents(output, events)
-		batch.RetryEvents(retryEvents)
+		batch.RetryEvents(getRetryEvents(output, events))
 		return nil
 	}
 
