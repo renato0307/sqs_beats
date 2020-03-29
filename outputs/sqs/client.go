@@ -54,8 +54,11 @@ func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*c
 	}
 
 	sess, err := session.NewSession(&aws.Config{
-		Region:      &config.Region,
-		Credentials: credentials.NewStaticCredentials(config.AccessKeyID, config.AccessSecretKey, ""),
+		Region: &config.Region,
+		Credentials: credentials.NewStaticCredentials(
+			config.AccessKeyID,
+			config.AccessSecretKey,
+			config.AccessToken),
 	})
 	if err != nil {
 		return nil, err

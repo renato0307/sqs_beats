@@ -10,6 +10,7 @@ import (
 type sqsConfig struct {
 	AccessKeyID     string        `config:"access_key_id"`
 	AccessSecretKey string        `config:"access_secret_key"`
+	AccessToken     string        `config:"access_token"`
 	Region          string        `config:"region"`
 	QueueURL        string        `config:"queue_url"`
 	BatchSize       int           `config:"batch_size"`
