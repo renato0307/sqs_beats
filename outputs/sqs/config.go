@@ -8,6 +8,8 @@ import (
 )
 
 type sqsConfig struct {
+	AccessKey  string        `config:"access_key"`
+	SecretKey  string        `config:"secret_key"`
 	Region     string        `config:"region"`
 	QueueURL   string        `config:"queue_url"`
 	BatchSize  int           `config:"batch_size"`
@@ -39,6 +41,10 @@ var (
 )
 
 func (c *sqsConfig) Validate() error {
+	if c.AccessKey != "" && c.SecretKey == "" {
+		return errors.New("secret_key is not defined")
+	}
+
 	if c.Region == "" {
 		return errors.New("region is not defined")
 	}

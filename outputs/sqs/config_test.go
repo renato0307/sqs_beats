@@ -13,10 +13,13 @@ func TestValidate(t *testing.T) {
 		Valid bool
 	}{
 		{"No config", sqsConfig{}, false},
+		{"Just access_key", sqsConfig{AccessKey: "accesskey"}, false},
 		{"Just region", sqsConfig{Region: "eu-west-1"}, false},
 		{"Just queue_name", sqsConfig{QueueURL: "test_queue"}, false},
 		{"Just region and queue_name", sqsConfig{QueueURL: "test_queue", Region: "eu-west-1"}, false},
 		{"With all required", sqsConfig{QueueURL: "test_queue", Region: "eu-west-1", BatchSize: 1}, true},
+		{"With access_key and secret_key and all required ", sqsConfig{AccessKey: "accesskey", SecretKey: "secretkey", QueueURL: "test_queue", Region: "eu-west-1", BatchSize: 1}, true},
+		{"With access_key and all required ", sqsConfig{AccessKey: "accesskey", QueueURL: "test_queue", Region: "eu-west-1", BatchSize: 1}, false},
 	}
 
 	for _, test := range tests {

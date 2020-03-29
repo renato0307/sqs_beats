@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/elastic/beats/libbeat/beat"
@@ -27,9 +28,36 @@ type client struct {
 }
 
 func newClient(config *sqsConfig, observer outputs.Observer, beat beat.Info) (*client, error) {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+
+	if config.AccessKey == "" {
+		sess := session.Must(session.NewSessionWithOptions(session.Options{
+			Config:            aws.Config{Region: &config.Region},
+			SharedConfigState: session.SharedConfigEnable,
+		}))
+
+		client := &client{
+			svc:      sqs.New(sess),
+			queueURL: config.QueueURL,
+			beatName: beat.Beat,
+			index:    beat.IndexPrefix,
+			codec: json.New(beat.Version, json.Config{
+				Pretty:     false,
+				EscapeHTML: false,
+			}),
+			timeout:  config.Timeout,
+			observer: observer,
+		}
+
+		return client, nil
+	}
+
+	sess, err := session.NewSession(&aws.Config{
+		Region:      &config.Region,
+		Credentials: credentials.NewStaticCredentials(config.AccessKey, config.SecretKey, ""),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	client := &client{
 		svc:      sqs.New(sess),
