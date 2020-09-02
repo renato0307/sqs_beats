@@ -20,7 +20,7 @@ func TestPublish(t *testing.T) {
 		svc:      svc,
 	}
 
-	err := c.Publish(batch)
+	err := c.Publish(nil, batch)
 
 	assert.Nil(t, err)
 }
@@ -39,7 +39,7 @@ func TestPublishWithError(t *testing.T) {
 		svc:      svc,
 	}
 
-	err := c.Publish(batch)
+	err := c.Publish(nil, batch)
 
 	assert.NotNil(t, err)
 }
@@ -58,7 +58,7 @@ func TestPublishWithFailedEvents(t *testing.T) {
 		svc:      svc,
 	}
 
-	err := c.Publish(batch)
+	err := c.Publish(nil , batch)
 
 	assert.Nil(t, err)
 }

@@ -3,7 +3,8 @@ package sqs
 import (
 	"fmt"
 	"strconv"
-
+	"context"
+	
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -74,7 +75,7 @@ func (c *client) Connect() error {
 	return nil
 }
 
-func (c *client) Publish(batch publisher.Batch) error {
+func (c *client) Publish(_ context.Context, batch publisher.Batch) error {
 
 	log := logp.NewLogger(logSelector)
 
